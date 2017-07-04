@@ -23,7 +23,6 @@
 package TrackAnalyzer;
 
 import at.ofai.music.beatroot.BeatRoot;
-import it.sauronsoftware.jave.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;

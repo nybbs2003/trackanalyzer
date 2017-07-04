@@ -22,16 +22,12 @@
  */
 package TrackAnalyzer;
 
-import at.ofai.music.beatroot.BeatRoot;
-import it.sauronsoftware.jave.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
@@ -41,24 +37,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jaudiotagger.audio.AudioFile;
-import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.exceptions.CannotWriteException;
-import org.jaudiotagger.tag.FieldDataInvalidException;
-import org.jaudiotagger.tag.FieldKey;
-import org.jaudiotagger.tag.KeyNotFoundException;
-import org.jaudiotagger.tag.Tag;
-import org.jaudiotagger.tag.TagField;
-import org.jaudiotagger.tag.flac.FlacTag;
-import org.jaudiotagger.tag.id3.*;
-import org.jaudiotagger.tag.id3.framebody.FrameBodyTXXX;
-import org.jaudiotagger.tag.mp4.Mp4FieldKey;
-import org.jaudiotagger.tag.mp4.Mp4Tag;
-import org.jaudiotagger.tag.mp4.field.Mp4TagReverseDnsField;
-import org.jaudiotagger.tag.mp4.field.Mp4TagTextField;
-import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
+
 import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
 
 public class TrackAnalyzerBenchmark {
 
