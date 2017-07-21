@@ -73,6 +73,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 class WormFileParseException extends RuntimeException {
 
 	static final long serialVersionUID = 0;
+
 	public WormFileParseException(String s) {
 		super(s);
 	} // constructor
@@ -82,6 +83,7 @@ class WormFileParseException extends RuntimeException {
 class MatchFileParseException extends RuntimeException {
 
 	static final long serialVersionUID = 0;
+
 	public MatchFileParseException(String s) {
 		super(s);
 	} // constructor
@@ -91,12 +93,12 @@ class MatchFileParseException extends RuntimeException {
 class BTFileParseException extends RuntimeException {
 
 	static final long serialVersionUID = 0;
+
 	public BTFileParseException(String s) {
 		super(s);
 	} // constructor
 
 } // class BTFileParseException
-
 
 // Process the strings which label extra features of notes in match files.
 // We assume no more than 32 distinct labels in a file.
@@ -104,15 +106,15 @@ class Flags {
 
 	String[] labels = new String[32];
 	int size = 0;
-	
+
 	int getFlag(String s) {
 		if ((s == null) || s.equals(""))
 			return 0;
-		//int val = 1;
+		// int val = 1;
 		for (int i = 0; i < size; i++)
 			if (s.equals(labels[i]))
 				return 1 << i;
-		if (size == 32)	{
+		if (size == 32) {
 			System.err.println("Overflow: Too many flags: " + s);
 			size--;
 		}
@@ -128,11 +130,10 @@ class Flags {
 
 } // class Flags
 
-
 // A score/match/midi file is represented as an EventList object,
-//  which contains pointers to the head and tail links, and some
-//  class-wide parameters. Parameters are class-wide, as it is
-//  assumed that the Worm has only one input file at a time.
+// which contains pointers to the head and tail links, and some
+// class-wide parameters. Parameters are class-wide, as it is
+// assumed that the Worm has only one input file at a time.
 public class EventList implements Serializable {
 
 	public LinkedList<Event> l;
@@ -160,7 +161,7 @@ public class EventList implements Serializable {
 
 	public EventList(Event[] e) {
 		this();
-		for (int i=0; i < e.length; i++)
+		for (int i = 0; i < e.length; i++)
 			add(e[i]);
 	} // constructor
 
@@ -226,8 +227,7 @@ public class EventList implements Serializable {
 
 	public void writeBinary(String fileName) {
 		try {
-			ObjectOutputStream oos = new ObjectOutputStream(
-										new FileOutputStream(fileName));
+			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName));
 			oos.writeObject(this);
 			oos.close();
 		} catch (IOException e) {
@@ -237,8 +237,7 @@ public class EventList implements Serializable {
 
 	public static EventList readBinary(String fileName) {
 		try {
-			ObjectInputStream ois = new ObjectInputStream(
-										new FileInputStream(fileName));
+			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName));
 			EventList e = (EventList) ois.readObject();
 			ois.close();
 			return e;
@@ -271,53 +270,47 @@ public class EventList implements Serializable {
 		tr[0] = s.createTrack();
 		MetaMessage mm = new MetaMessage();
 		byte[] b = new byte[3];
-		b[0] = (byte)((midiTempo >> 16) & 0xFF);
-		b[1] = (byte)((midiTempo >> 8) & 0xFF);
-		b[2] = (byte)(midiTempo & 0xFF);
+		b[0] = (byte) ((midiTempo >> 16) & 0xFF);
+		b[1] = (byte) ((midiTempo >> 8) & 0xFF);
+		b[2] = (byte) (midiTempo & 0xFF);
 		mm.setMessage(0x51, b, 3);
 		tr[0].add(new MidiEvent(mm, 0L));
-		for (Event e : l) {		// from match or beatTrack file
-			if (e.midiCommand == 0)	// skip beatTrack file
+		for (Event e : l) { // from match or beatTrack file
+			if (e.midiCommand == 0) // skip beatTrack file
 				break;
 			if (tr[e.midiTrack] == null)
 				tr[e.midiTrack] = s.createTrack();
-			//switch (e.midiCommand) 
-			//case ShortMessage.NOTE_ON:
-			//case ShortMessage.POLY_PRESSURE:
-			//case ShortMessage.CONTROL_CHANGE:
-			//case ShortMessage.PROGRAM_CHANGE:
-			//case ShortMessage.CHANNEL_PRESSURE:
-			//case ShortMessage.PITCH_BEND:
+			// switch (e.midiCommand)
+			// case ShortMessage.NOTE_ON:
+			// case ShortMessage.POLY_PRESSURE:
+			// case ShortMessage.CONTROL_CHANGE:
+			// case ShortMessage.PROGRAM_CHANGE:
+			// case ShortMessage.CHANNEL_PRESSURE:
+			// case ShortMessage.PITCH_BEND:
 			ShortMessage sm = new ShortMessage();
-			sm.setMessage(e.midiCommand, e.midiChannel,
-							e.midiPitch, e.midiVelocity);
-			tr[e.midiTrack].add(new MidiEvent(sm,
-						(long)Math.round(1000 * e.keyDown)));
+			sm.setMessage(e.midiCommand, e.midiChannel, e.midiPitch, e.midiVelocity);
+			tr[e.midiTrack].add(new MidiEvent(sm, (long) Math.round(1000 * e.keyDown)));
 			if (e.midiCommand == ShortMessage.NOTE_ON) {
 				sm = new ShortMessage();
 				sm.setMessage(ShortMessage.NOTE_OFF, e.midiChannel, e.midiPitch, 0);
-				tr[e.midiTrack].add(new MidiEvent(sm, (long)Math.round(1000 * e.keyUp)));
+				tr[e.midiTrack].add(new MidiEvent(sm, (long) Math.round(1000 * e.keyUp)));
 			}
 		}
-		if (pedal != null) {	// from MIDI file
-	//		if (t.size() > 0)	// otherwise beatTrack files leave an empty trk
-	//			t = s.createTrack();
+		if (pedal != null) { // from MIDI file
+			// if (t.size() > 0) // otherwise beatTrack files leave an empty trk
+			// t = s.createTrack();
 			for (Event e : pedal.l) {
 				if (tr[e.midiTrack] == null)
 					tr[e.midiTrack] = s.createTrack();
 				ShortMessage sm = new ShortMessage();
-				sm.setMessage(e.midiCommand, e.midiChannel, 
-								e.midiPitch, e.midiVelocity);
-				tr[e.midiTrack].add(new MidiEvent(sm,
-						(long)Math.round(1000 * e.keyDown)));
+				sm.setMessage(e.midiCommand, e.midiChannel, e.midiPitch, e.midiVelocity);
+				tr[e.midiTrack].add(new MidiEvent(sm, (long) Math.round(1000 * e.keyDown)));
 				if (e.midiCommand == ShortMessage.NOTE_ON) {
 					sm = new ShortMessage();
-					sm.setMessage(ShortMessage.NOTE_OFF, e.midiChannel,
-									e.midiPitch,e.midiVelocity);
-					tr[e.midiTrack].add(new MidiEvent(sm,
-							(long)Math.round(1000 * e.keyUp)));
+					sm.setMessage(ShortMessage.NOTE_OFF, e.midiChannel, e.midiPitch, e.midiVelocity);
+					tr[e.midiTrack].add(new MidiEvent(sm, (long) Math.round(1000 * e.keyUp)));
 				}
-				//catch (InvalidMidiDataException exception) {}
+				// catch (InvalidMidiDataException exception) {}
 			}
 		}
 		return s;
@@ -355,18 +348,14 @@ public class EventList implements Serializable {
 					int pitch = mesg[1] & 0x7F;
 					int velocity = mesg[2] & 0x7F;
 					if (noteOns[pitch][channel] != null) {
-						if (velocity == 0) {	// NOTE_OFF in disguise :(
+						if (velocity == 0) { // NOTE_OFF in disguise :(
 							noteOns[pitch][channel].keyUp = time;
 							noteOns[pitch][channel].pedalUp = time;
 							noteOns[pitch][channel] = null;
 						} else
- 							System.err.println("Double note on: n=" + pitch +
-									" c=" + channel +
-									" t1=" + noteOns[pitch][channel] +
-									" t2=" + time);
+							System.err.println("Double note on: n=" + pitch + " c=" + channel + " t1=" + noteOns[pitch][channel] + " t2=" + time);
 					} else {
-						Event n = new Event(time, 0, 0, pitch, velocity, -1, -1,
-										0, ShortMessage.NOTE_ON, channel, t);
+						Event n = new Event(time, 0, 0, pitch, velocity, -1, -1, 0, ShortMessage.NOTE_ON, channel, t);
 						noteOns[pitch][channel] = n;
 						list.add(n);
 					}
@@ -377,12 +366,10 @@ public class EventList implements Serializable {
 					noteOns[pitch][channel] = null;
 				} else if (command == 0xF0) {
 					if ((channel == 0x0F) && (mesg[1] == 0x51)) {
-						midiTempo = (mesg[5] & 0xFF) |
-									((mesg[4] & 0xFF) << 8) |
-									((mesg[3] & 0xFF) << 16);
+						midiTempo = (mesg[5] & 0xFF) | ((mesg[4] & 0xFF) << 8) | ((mesg[3] & 0xFF) << 16);
 						tempoFactor = midiTempo / s.getResolution() / 1000000.0;
-					//	System.err.println("Info: Tempo change: " + midiTempo +
-					//						"  tf=" + tempoFactor);
+						// System.err.println("Info: Tempo change: " + midiTempo +
+						// " tf=" + tempoFactor);
 					}
 				} else if (mesg.length > 3) {
 					System.err.println("midi message too long: " + mesg.length);
@@ -395,22 +382,19 @@ public class EventList implements Serializable {
 						b1 = mesg[1] & 0xFF;
 					if (mesg.length > 2)
 						b2 = mesg[2] & 0xFF;
-					list.add(new Event(time, time, -1, b1, b2, -1, -1, 0,
-										b0 & 0xF0, b0 & 0x0F, t));
+					list.add(new Event(time, time, -1, b1, b2, -1, -1, 0, b0 & 0xF0, b0 & 0x0F, t));
 				}
 			}
 		}
 		for (int pitch = 0; pitch < 128; pitch++)
 			for (int channel = 0; channel < 16; channel++)
 				if (noteOns[pitch][channel] != null)
-					System.err.println("Missing note off: n=" + 
-							noteOns[pitch][channel].midiPitch + " t=" +
-							noteOns[pitch][channel].keyDown);
+					System.err.println("Missing note off: n=" + noteOns[pitch][channel].midiPitch + " t=" + noteOns[pitch][channel].keyDown);
 		return list;
 	} // readMidiFile()
 
 	public void print() {
-		for (Iterator<Event> i = l.iterator(); i.hasNext(); )
+		for (Iterator<Event> i = l.iterator(); i.hasNext();)
 			i.next().print(flags);
 	} // print()
 
@@ -437,26 +421,25 @@ public class EventList implements Serializable {
 				ind = s.indexOf(' ');
 			double time = 0;
 			if (ind >= 0) {
-				String tmp = s.substring(0,ind).trim();
+				String tmp = s.substring(0, ind).trim();
 				if (tmp.length() == 0) {
 					s = inputFile.readLine();
 					continue;
 				}
 				time = Double.parseDouble(tmp);
-				s = s.substring(ind+1);
+				s = s.substring(ind + 1);
 			} else {
 				String tmp = s.trim();
 				if (tmp.length() > 0)
 					time = Double.parseDouble(tmp);
 				s = inputFile.readLine();
 			}
-			list.add(new Event(time, time, time, pitch, vol, ++beats,
-				1.0, fl, ShortMessage.NOTE_ON, ch, track));
+			list.add(new Event(time, time, time, pitch, vol, ++beats, 1.0, fl, ShortMessage.NOTE_ON, ch, track));
 		}
 		return list;
 	} // readBeatsAsText()
-	
-	public static EventList readBeatTrackFile(String fileName) throws Exception{
+
+	public static EventList readBeatTrackFile(String fileName) throws Exception {
 		if (!fileName.endsWith(".tmf")) // || fileName.endsWith(".csv"))
 			return readBeatsAsText(fileName);
 		else {
@@ -465,10 +448,10 @@ public class EventList implements Serializable {
 			Matcher s = new Matcher(inputFile.readLine());
 			if (!s.matchString("MFile"))
 				throw new BTFileParseException("Header not found");
-			s.getInt();	// skip fileType
+			s.getInt(); // skip fileType
 			int tracks = s.getInt();
 			int div = s.getInt();
-			int tempo = 500000;	// default tempo
+			int tempo = 500000; // default tempo
 			double tf = 1e6 / tempo * div;
 			int lineCount = 1;
 			int beats = 0;
@@ -506,11 +489,9 @@ public class EventList implements Serializable {
 						s.matchString("ol");
 						s.matchString("=");
 						int flags = s.getInt();
-						list.add(new Event(time, time, time, pitch, vol, ++beats,
-								1.0, flags, ShortMessage.NOTE_ON, ch, track));
+						list.add(new Event(time, time, time, pitch, vol, ++beats, 1.0, flags, ShortMessage.NOTE_ON, ch, track));
 					} else if (!s.matchString("Meta TrkEnd")) {
-						System.err.println("Unmatched text on line " + lineCount +
-								": " + s.get());
+						System.err.println("Unmatched text on line " + lineCount + ": " + s.get());
 					}
 					s.set(inputFile.readLine());
 					lineCount++;
@@ -525,38 +506,38 @@ public class EventList implements Serializable {
 		char separator = '\n';
 		if (fileName.endsWith(".csv"))
 			separator = ',';
-		for (Iterator<Event> it = iterator(); it.hasNext(); ) {
+		for (Iterator<Event> it = iterator(); it.hasNext();) {
 			Event e = it.next();
-			out.printf("%5.3f%c", e.keyDown, it.hasNext()? separator: '\n');
+			out.printf("%5.3f%c", e.keyDown, it.hasNext() ? separator : '\n');
 		}
 		out.close();
 	} // writeBeatsAsText()
 
 	public double getBPM() {
-        double maxbpm = 165;
+		double maxbpm = 165;
 		double minbpm = 67;
 		ArrayList<Double> onsetList = new ArrayList<Double>();
-		for (Iterator<Event> it = iterator(); it.hasNext(); ) {
+		for (Iterator<Event> it = iterator(); it.hasNext();) {
 			Event e = it.next();
 			onsetList.add(e.keyDown);
 		}
 		DescriptiveStatistics stats = new DescriptiveStatistics();
-		if (onsetList.size()>1) 
-			for (int i=1;i<onsetList.size();i++) {
-				stats.addValue(onsetList.get(i)-onsetList.get(i-1));
+		if (onsetList.size() > 1)
+			for (int i = 1; i < onsetList.size(); i++) {
+				stats.addValue(onsetList.get(i) - onsetList.get(i - 1));
 			}
-		
+
 		double median = stats.getPercentile(50);
-		double bpm = 60/median;
-        if (bpm > maxbpm) {
-            bpm = bpm/2;
-        } else if (bpm < minbpm) {
-			bpm = bpm*2;
+		double bpm = 60 / median;
+		if (bpm > maxbpm) {
+			bpm = bpm / 2;
+		} else if (bpm < minbpm) {
+			bpm = bpm * 2;
 		}
-		
+
 		return bpm;
 	}
-			
+
 	public void writeBeatTrackFile(String fileName) throws Exception {
 		if (fileName.endsWith(".txt") || fileName.endsWith(".csv"))
 			writeBeatsAsText(fileName);
@@ -566,19 +547,16 @@ public class EventList implements Serializable {
 			out.println("MTrk");
 			out.println("     0 Tempo 500000");
 			int time = 0;
-			for (Iterator<Event> it = iterator(); it.hasNext(); ) {
+			for (Iterator<Event> it = iterator(); it.hasNext();) {
 				Event e = it.next();
 				time = (int) Math.round(1000 * e.keyDown);
-				out.printf("%6d On   ch=%3d n=%3d v=%3d\n",
-							time, e.midiChannel, e.midiPitch, e.midiVelocity);
-				out.printf("%6d Off  ch=%3d n=%3d v=%3d\n",
-							time, e.midiChannel, e.midiPitch, e.flags);
+				out.printf("%6d On   ch=%3d n=%3d v=%3d\n", time, e.midiChannel, e.midiPitch, e.midiVelocity);
+				out.printf("%6d Off  ch=%3d n=%3d v=%3d\n", time, e.midiChannel, e.midiPitch, e.flags);
 			}
 			out.printf("%6d Meta TrkEnd\nTrkEnd\n", time);
 			out.close();
 		}
 	} // writeBeatTrackFile()
-
 
 	/** Reads a file containing time,String pairs into an EventList. */
 	public static EventList readLabelFile(String fileName) throws Exception {
@@ -600,18 +578,17 @@ public class EventList implements Serializable {
 				if (colon < 0)
 					colon = label.length();
 				else
-					beat = Integer.parseInt(label.substring(colon+1));
+					beat = Integer.parseInt(label.substring(colon + 1));
 				int bar = Integer.parseInt(label.substring(0, colon));
 				int flags = WormFile.BEAT;
 				if (bar != prevBar) {
 					flags |= WormFile.BAR;
 					prevBar = bar;
 				}
-				WormEvent ev = new WormEvent(time, time, time, pitch, vol,
-						++beats,1.0,flags, ShortMessage.NOTE_ON, ch, track);
+				WormEvent ev = new WormEvent(time, time, time, pitch, vol, ++beats, 1.0, flags, ShortMessage.NOTE_ON, ch, track);
 				ev.label = label;
 				list.add(ev);
-//				System.out.println(time + " " + label);
+				// System.out.println(time + " " + label);
 			}
 			s.set(inputFile.readLine());
 		}
@@ -622,7 +599,7 @@ public class EventList implements Serializable {
 		PrintStream out = new PrintStream(new File(fileName));
 		out.printf("###Created automatically\n");
 		for (Event ev : l)
-			out.printf("%5.3f\t%s\n", ev.keyDown, ((WormEvent)ev).label);
+			out.printf("%5.3f\t%s\n", ev.keyDown, ((WormEvent) ev).label);
 		out.close();
 	} // writeLabelFile()
 
@@ -642,8 +619,7 @@ public class EventList implements Serializable {
 			lineCount++;
 			if (dataCountDown == 0) {
 				if (s.hasData())
-					System.err.println("Ignoring trailing data past line " +
-										lineCount);
+					System.err.println("Ignoring trailing data past line " + lineCount);
 				return list;
 			} else if (!s.hasData())
 				throw new WormFileParseException("Unexpected EOF");
@@ -656,7 +632,7 @@ public class EventList implements Serializable {
 				double loudness = s.getDouble();
 				int flags = s.getInt();
 				if ((flags & WormFile.TRACK) != 0)
-					beat++;		// i.e. always, as index for comparing files 
+					beat++; // i.e. always, as index for comparing files
 				list.add(new WormEvent(time, tempo, loudness, beat, flags));
 				dataCountDown--;
 			}
@@ -668,12 +644,11 @@ public class EventList implements Serializable {
 	} // getAudioFileFromWormFile()
 
 	public static double getTrackLevelFromWormFile(String wormFile) {
-		String level = getWormFileAttribute(wormFile,WormParameters.TRACKLEVEL);
+		String level = getWormFileAttribute(wormFile, WormParameters.TRACKLEVEL);
 		try {
 			int i = level.indexOf("/");
 			if (i >= 0)
-				return Double.parseDouble(level.substring(0,i)) /
-						Double.parseDouble(level.substring(i+1));
+				return Double.parseDouble(level.substring(0, i)) / Double.parseDouble(level.substring(i + 1));
 			else
 				return Double.parseDouble(level);
 		} catch (Exception e) {
@@ -714,7 +689,7 @@ public class EventList implements Serializable {
 			beat = UNKNOWN;
 			duration = UNKNOWN;
 			// System.out.println("Processing line " + lineCount);
-			if (s.matchString("info(")) {	// meta-data
+			if (s.matchString("info(")) { // meta-data
 				if (s.matchString("timeSignature,")) {
 					numerator = s.getInt();
 					// ss1 << "beatsPerBar=" << numerator << ends;
@@ -735,16 +710,16 @@ public class EventList implements Serializable {
 				} else if (s.matchString("midiClockRate,")) {
 					clockRate = s.getInt();
 				}
-				s.set("%");	// don't expect the second half of the Prolog term
+				s.set("%"); // don't expect the second half of the Prolog term
 			} else if (s.matchString("snote(")) {
-				s.skip(',');	// identifier
-				s.skip(']');	// note name
-				s.skip(',');	// ',' after note name
-				s.skip(',');	// octave
-				s.skip(',');	// onset time (in beats, integer part, bar:beat)
+				s.skip(','); // identifier
+				s.skip(']'); // note name
+				s.skip(','); // ',' after note name
+				s.skip(','); // octave
+				s.skip(','); // onset time (in beats, integer part, bar:beat)
 				boolean isBt = s.matchString("0");
-				s.skip(',');	// onset time (in beats, fractional part)
-				s.skip(',');	// duration (in beats, fraction)
+				s.skip(','); // onset time (in beats, fractional part)
+				s.skip(','); // duration (in beats, fraction)
 				try {
 					beat = s.getDouble();
 				} catch (NumberFormatException e) {
@@ -752,16 +727,16 @@ public class EventList implements Serializable {
 					beat = UNKNOWN;
 				}
 				if ((beat == Math.rint(beat)) != isBt)
-					System.err.println("Inconsistent beats on line "+lineCount);
-				s.skip(',');	// onset time (in beats, decimal) 
+					System.err.println("Inconsistent beats on line " + lineCount);
+				s.skip(','); // onset time (in beats, decimal)
 				try {
 					duration = s.getDouble() - beat;
 				} catch (NumberFormatException e) {
 					System.err.println("Bad duration on line " + lineCount);
 					duration = UNKNOWN;
 				}
-				s.skip(',');	// offset time (in beats, decimal)
-				s.skip('[');	// additional info (e.g. melody/arpeggio/grace)
+				s.skip(','); // offset time (in beats, decimal)
+				s.skip('['); // additional info (e.g. melody/arpeggio/grace)
 				do {
 					element = s.getString();
 					eventFlags |= flags.getFlag(element);
@@ -773,38 +748,54 @@ public class EventList implements Serializable {
 			} else if (s.matchString("ornament(")) {
 				eventFlags |= flags.getFlag("ornament");
 				s.skip('-');
-			} else if (s.matchString("trailing_played_note-") ||
-					   s.matchString("hammer_bounce-") ||   
-					   s.matchString("no_score_note-") ||
-					   s.matchString("insertion-")) {
+			} else if (s.matchString("trailing_played_note-") || s.matchString("hammer_bounce-") || s.matchString("no_score_note-") || s.matchString("insertion-")) {
 				eventFlags |= flags.getFlag("unscored");
-			} else if (!s.matchString("%")) {		// Prolog comment
-				throw new MatchFileParseException("error 4; line "+lineCount);
+			} else if (!s.matchString("%")) { // Prolog comment
+				throw new MatchFileParseException("error 4; line " + lineCount);
 			}
 			// READ 2nd term of Prolog expression
 			if (s.matchString("note(")) {
-				s.skip('[');	// skip identifier
+				s.skip('['); // skip identifier
 				String note = s.getString();
-				switch(Character.toUpperCase(note.charAt(0))) {
-					case 'A': pitch =  9; break;
-					case 'B': pitch = 11; break;
-					case 'C': pitch =  0; break; 
-					case 'D': pitch =  2; break;
-					case 'E': pitch =  4; break;
-					case 'F': pitch =  5; break;
-					case 'G': pitch =  7; break;
-					default:  throw new MatchFileParseException(
-											"Bad note on line " + lineCount);
+				switch (Character.toUpperCase(note.charAt(0))) {
+				case 'A':
+					pitch = 9;
+					break;
+				case 'B':
+					pitch = 11;
+					break;
+				case 'C':
+					pitch = 0;
+					break;
+				case 'D':
+					pitch = 2;
+					break;
+				case 'E':
+					pitch = 4;
+					break;
+				case 'F':
+					pitch = 5;
+					break;
+				case 'G':
+					pitch = 7;
+					break;
+				default:
+					throw new MatchFileParseException("Bad note on line " + lineCount);
 				}
 				s.skip(',');
 				String mod = s.getString();
 				for (int i = 0; i < mod.length(); i++) {
 					switch (mod.charAt(i)) {
-						case '#': pitch++; break;
-						case 'b': pitch--; break;
-						case 'n': break;
-						default: throw new MatchFileParseException("error 5 " +
-																	lineCount);
+					case '#':
+						pitch++;
+						break;
+					case 'b':
+						pitch--;
+						break;
+					case 'n':
+						break;
+					default:
+						throw new MatchFileParseException("error 5 " + lineCount);
 					}
 				}
 				s.skip(',');
@@ -834,16 +825,11 @@ public class EventList implements Serializable {
 					eOffset -= timingDisplacement;
 				}
 				int m = flags.getFlag("s");
-				if ((((eventFlags & m) != 0) && !noMelody) ||
-						(((eventFlags & m) == 0) && !onlyMelody)) {
-					Event e = new Event(onset, offset, eOffset, pitch, velocity,
-										beat, duration, eventFlags);
+				if ((((eventFlags & m) != 0) && !noMelody) || (((eventFlags & m) == 0) && !onlyMelody)) {
+					Event e = new Event(onset, offset, eOffset, pitch, velocity, beat, duration, eventFlags);
 					list.add(e);
 				}
-			} else if (!s.matchString("no_played_note.") &&
-					   !s.matchString("trailing_score_note.") &&
-					   !s.matchString("deletion.") &&
-					   !s.matchString("%"))
+			} else if (!s.matchString("no_played_note.") && !s.matchString("trailing_score_note.") && !s.matchString("deletion.") && !s.matchString("%"))
 				throw new MatchFileParseException("error 6; line " + lineCount);
 			s.set(inputFile.readLine());
 			lineCount++;
@@ -851,9 +837,9 @@ public class EventList implements Serializable {
 		return list;
 	} // readMatchFile()
 
-	public static void main(String[] args) throws Exception {	// quick test
-		//System.out.println("Test");
-		//readLabelFile(args[0]).writeLabelFile("tmp.txt");
+	public static void main(String[] args) throws Exception { // quick test
+		// System.out.println("Test");
+		// readLabelFile(args[0]).writeLabelFile("tmp.txt");
 		readLabelFile(args[0]).print();
 		System.exit(0);
 		EventList el = readMatchFile(args[0]);

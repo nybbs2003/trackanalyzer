@@ -24,9 +24,9 @@
 ************************************************************************/ 
 package TrackAnalyzer;
 
-import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
 import java.util.ArrayList;
-import java.util.Arrays;
+
+import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
 
 public class FftwAnalyser extends SpectrumAnalyser {
 

@@ -28,13 +28,13 @@ import at.ofai.music.util.Format;
 //   Assumes a monotonic mapping (t1 > t2  <=>  s1 > s2)
 public class MatchTempoMap implements TempoMap {
 
-	protected double[] realTime;		// in seconds
-	protected double[] scoreTime;		// in beats or MIDI units
-	protected int[] repeats;			// for calculating the average if needed
-	protected int size;					// number of entries being used
+	protected double[] realTime; // in seconds
+	protected double[] scoreTime; // in beats or MIDI units
+	protected int[] repeats; // for calculating the average if needed
+	protected int size; // number of entries being used
 
 	public MatchTempoMap() {
-		this(5000);		// Mozart files are up to 3251 notes
+		this(5000); // Mozart files are up to 3251 notes
 	} // default constructor
 
 	public MatchTempoMap(int sz) {
@@ -69,31 +69,28 @@ public class MatchTempoMap implements TempoMap {
 		closeList();
 		return lookup(sTime, scoreTime, realTime);
 	} // toRealTime()
-	
+
 	public double toScoreTime(double rTime) {
 		closeList();
 		return lookup(rTime, realTime, scoreTime);
 	} // toScoreTime()
-	
+
 	public double lookup(double value, double[] domain, double[] range) {
 		int index = java.util.Arrays.binarySearch(domain, value);
 		if (index >= 0)
 			return range[index];
-		if ((size == 0) || ((size == 1) &&
-				((range[0] == 0) || (domain[0] == 0))))
+		if ((size == 0) || ((size == 1) && ((range[0] == 0) || (domain[0] == 0))))
 			throw new RuntimeException("Insufficient entries in tempo map");
 		if (size == 1)
 			return value * range[0] / domain[0];
-		index = -1 - index;		// do linear interpolation
-		if (index == 0) 		// unless at ends, where it is extrapolation
+		index = -1 - index; // do linear interpolation
+		if (index == 0) // unless at ends, where it is extrapolation
 			index++;
 		else if (index == size)
 			index--;
-		return (range[index] * (value - domain[index - 1]) +
-				range[index - 1] * (domain[index] - value)) /
-				(domain[index] - domain[index - 1]);
+		return (range[index] * (value - domain[index - 1]) + range[index - 1] * (domain[index] - value)) / (domain[index] - domain[index - 1]);
 	} // lookup()
-	
+
 	public void add(double rTime, double sTime) {
 		if (Double.isNaN(sTime))
 			return;
@@ -104,17 +101,16 @@ public class MatchTempoMap implements TempoMap {
 				break;
 		if ((index == size) || (sTime != scoreTime[index])) {
 			for (int j = size; j > index; j--) {
-				scoreTime[j] = scoreTime[j-1];
-				realTime[j] = realTime[j-1];
-				repeats[j] = repeats[j-1];
+				scoreTime[j] = scoreTime[j - 1];
+				realTime[j] = realTime[j - 1];
+				repeats[j] = repeats[j - 1];
 			}
 			size++;
 			scoreTime[index] = sTime;
 			realTime[index] = rTime;
 			repeats[index] = 1;
-		} else {	// average time of multiple nominally simultaneous notes
-			realTime[index] = (repeats[index] * realTime[index] + rTime) /
-								(repeats[index] + 1);
+		} else { // average time of multiple nominally simultaneous notes
+			realTime[index] = (repeats[index] * realTime[index] + rTime) / (repeats[index] + 1);
 			repeats[index]++;
 		}
 	} // add()
@@ -127,13 +123,11 @@ public class MatchTempoMap implements TempoMap {
 		double[] tmp = new double[tempo.length];
 		int i = 0;
 		for (int j = 1; j < size; j++)
-			for ( ; i * step < realTime[j]; i++)
-				tmp[i] = (realTime[j] - realTime[j - 1]) /
-							(scoreTime[j] - scoreTime[j - 1]);
-		for ( ; i < tmp.length; i++)
-			tmp[i] = (realTime[size - 1] - realTime[size - 2]) /
-							(scoreTime[size - 1] - scoreTime[size - 2]);
-		int window = (int)(0.1 / step);     // smooth over 2.0 second window
+			for (; i * step < realTime[j]; i++)
+				tmp[i] = (realTime[j] - realTime[j - 1]) / (scoreTime[j] - scoreTime[j - 1]);
+		for (; i < tmp.length; i++)
+			tmp[i] = (realTime[size - 1] - realTime[size - 2]) / (scoreTime[size - 1] - scoreTime[size - 2]);
+		int window = (int) (0.1 / step); // smooth over 2.0 second window
 		double sum = 0;
 		for (i = 0; i < tmp.length; i++) {
 			sum += tmp[i];
@@ -143,7 +137,7 @@ public class MatchTempoMap implements TempoMap {
 			} else
 				tempo[i] = sum / (i + 1);
 			// System.out.println(i + " " + Format.d(tmp[i],3) +
-			// 					   " " + Format.d(tempo[i], 3));
+			// " " + Format.d(tempo[i], 3));
 			if (tempo[i] != 0)
 				tempo[i] = 60.0 / tempo[i];
 		}
@@ -152,8 +146,7 @@ public class MatchTempoMap implements TempoMap {
 	public void print() {
 		System.out.println("Score  |  Perf.\n-------+-------");
 		for (int i = 0; i < size; i++)
-			System.out.println(Format.d(scoreTime[i], 3) + "  |  " +
-								Format.d(realTime[i], 3));
+			System.out.println(Format.d(scoreTime[i], 3) + "  |  " + Format.d(realTime[i], 3));
 	} // print()
 
 	public static void main(String[] args) { // unit test
@@ -162,14 +155,12 @@ public class MatchTempoMap implements TempoMap {
 		mtm.add(0.8, 2);
 		mtm.add(0.95, 2.5);
 		mtm.add(1.0, 3);
-		double[] st = {0, 1, 2, 3, 4};
-		for (int i = 0 ; i < st.length; i++)
-			System.out.println(st[i] + " -> " + mtm.toRealTime(st[i]) +
-							   " -> " + mtm.toScoreTime(mtm.toRealTime(st[i])));
-		double[] rt = {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1};
-		for (int i = 0 ; i < rt.length; i++)
-			System.out.println(rt[i] + " => " + mtm.toScoreTime(rt[i]) +
-							   " => " + mtm.toRealTime(mtm.toScoreTime(rt[i])));
+		double[] st = { 0, 1, 2, 3, 4 };
+		for (int i = 0; i < st.length; i++)
+			System.out.println(st[i] + " -> " + mtm.toRealTime(st[i]) + " -> " + mtm.toScoreTime(mtm.toRealTime(st[i])));
+		double[] rt = { 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1 };
+		for (int i = 0; i < rt.length; i++)
+			System.out.println(rt[i] + " => " + mtm.toScoreTime(rt[i]) + " => " + mtm.toRealTime(mtm.toScoreTime(rt[i])));
 	} // main()
 
 } // class MatchTempoMap

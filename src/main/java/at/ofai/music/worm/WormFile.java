@@ -46,9 +46,8 @@ public class WormFile {
 	double[] inIntensity, outIntensity;
 	int[] inFlags, outFlags;
 	String[] label;
-	public static final int
-		TRACK=1, BEAT=2, BAR=4, SEG1=8, SEG2=16, SEG3=32, SEG4=64;
-	public static final double defaultFramePeriod = 0.1;	// 10 FPS
+	public static final int TRACK = 1, BEAT = 2, BAR = 4, SEG1 = 8, SEG2 = 16, SEG3 = 32, SEG4 = 64;
+	public static final double defaultFramePeriod = 0.1; // 10 FPS
 	WormParameters info;
 
 	private WormFile(Frame f) {
@@ -75,7 +74,7 @@ public class WormFile {
 	} // constructor
 
 	public WormFile(Worm w, EventList el) {
-		this(w == null? null: w.theFrame);
+		this(w == null ? null : w.theFrame);
 		worm = w;
 		convertList(el);
 	} // constructor
@@ -105,7 +104,7 @@ public class WormFile {
 			for (int i = 0; i < length; i++)
 				time[i] = inFramePeriod * i;
 		}
-		int outLength = 1+(int) Math.ceil(time[time.length-1] / outFramePeriod);
+		int outLength = 1 + (int) Math.ceil(time[time.length - 1] / outFramePeriod);
 		if ((outTempo == null) || (outTempo.length != outLength)) {
 			outTempo = new double[outLength];
 			outIntensity = new double[outLength];
@@ -119,8 +118,8 @@ public class WormFile {
 				outIntensity[o] = inIntensity[0];
 				o++;
 			}
-			for ( ; i < time.length - 1; i++) {
-				while (o * outFramePeriod < time[i+1]) {
+			for (; i < time.length - 1; i++) {
+				while (o * outFramePeriod < time[i + 1]) {
 					outTempo[o] = inTempo[i];
 					outIntensity[o] = inIntensity[i];
 					o++;
@@ -132,8 +131,7 @@ public class WormFile {
 				o++;
 			}
 		} else {
-			info.smoothing = "Gaussian" + "\t" + Format.d(left, 4) +
-									 "\t" + Format.d(right, 4);
+			info.smoothing = "Gaussian" + "\t" + Format.d(left, 4) + "\t" + Format.d(right, 4);
 			if (smoothLevel != 0) {
 				int count = 0;
 				double first = 0, last = 0;
@@ -148,12 +146,11 @@ public class WormFile {
 				if (count < 2)
 					System.err.println("Warning: Beat data not available");
 				else {
-					double IBI = (last - first) / (count - 1); 
+					double IBI = (last - first) / (count - 1);
 					left *= IBI;
 					right *= IBI;
-					info.smoothing += "\t" +Format.d(IBI,4) + "\t" +smoothLevel;
-					System.out.println("Smoothing parameters (seconds): pre=" +
-							Format.d(left,3) + " post=" + Format.d(right,3));
+					info.smoothing += "\t" + Format.d(IBI, 4) + "\t" + smoothLevel;
+					System.out.println("Smoothing parameters (seconds): pre=" + Format.d(left, 3) + " post=" + Format.d(right, 3));
 				}
 			}
 			int start = 0;
@@ -161,21 +158,21 @@ public class WormFile {
 				double sum = 0, val = 0, tempo = 0, intensity = 0;
 				for (int i = start; i < time.length; i++) {
 					double d = o * outFramePeriod - time[i];
-					if (d > 4 * left) {	// average over 4 stddevs
+					if (d > 4 * left) { // average over 4 stddevs
 						start++;
 						continue;
 					}
 					if (d < -4 * right)
 						break;
 					if (d < 0)
-						val = Math.exp(-d*d/(left*left*2));
+						val = Math.exp(-d * d / (left * left * 2));
 					else
-						val = Math.exp(-d*d/(right*right*2));
+						val = Math.exp(-d * d / (right * right * 2));
 					sum += val;
 					tempo += val * inTempo[i];
 					intensity += val * inIntensity[i];
 				}
-				if (sum == 0) {		// assume this only occurs at beginning
+				if (sum == 0) { // assume this only occurs at beginning
 					outTempo[o] = inTempo[0];
 					outIntensity[o] = inIntensity[0];
 				} else {
@@ -187,7 +184,7 @@ public class WormFile {
 		for (int i = 0; i < outFlags.length; i++)
 			outFlags[i] = 0;
 		for (int i = 0; i < inFlags.length; i++)
-			outFlags[(int)Math.round(time[i] / outFramePeriod)] |= inFlags[i];
+			outFlags[(int) Math.round(time[i] / outFramePeriod)] |= inFlags[i];
 		int bar = 0;
 		int beat = 0;
 		int track = 0;
@@ -198,11 +195,10 @@ public class WormFile {
 				beat++;
 			if ((outFlags[i] & TRACK) != 0)
 				track++;
-			label[i] = bar + ":" + beat + ":" + track + ":" +
-						Format.d(i * outFramePeriod, 1);
+			label[i] = bar + ":" + beat + ":" + track + ":" + Format.d(i * outFramePeriod, 1);
 		}
 	} // smooth()
-	
+
 	public void editParameters() {
 		info.editParameters();
 		update();
@@ -211,8 +207,7 @@ public class WormFile {
 	public void update() {
 		length = info.length;
 		inFramePeriod = info.framePeriod;
-		worm.setTitle(info.composer + ", " + info.piece +
-						", played by " + info.performer);
+		worm.setTitle(info.composer + ", " + info.piece + ", played by " + info.performer);
 		// not used (?) : beatLevel trackLevel upbeat beatsPerBar
 		if ((inTempo == null) || (inTempo.length != length))
 			init();
@@ -227,43 +222,42 @@ public class WormFile {
 	public void convertList(EventList el) {
 		double tMax = 0;
 		int count = 0;
-		for (Iterator<Event> i = el.iterator(); i.hasNext(); ) {
+		for (Iterator<Event> i = el.iterator(); i.hasNext();) {
 			double pedalUpTime = i.next().pedalUp;
 			if (pedalUpTime > tMax)
 				tMax = pedalUpTime;
 			count++;
 		}
-		length = (int)Math.ceil(tMax / inFramePeriod);
+		length = (int) Math.ceil(tMax / inFramePeriod);
 		init();
 		// double[] decayFactor = new double[128];
 		// for (int i = 0; i < 128; i++)
-		// 	decayFactor[i] = Math.max(5.0, (i - 6.0) / 3.0) * inFramePeriod;
-		// 	// was Math.pow(0.1, inFramePeriod);	// modify for pitch?
-		for (Iterator<Event> i = el.l.iterator(); i.hasNext(); ) {
+		// decayFactor[i] = Math.max(5.0, (i - 6.0) / 3.0) * inFramePeriod;
+		// // was Math.pow(0.1, inFramePeriod); // modify for pitch?
+		for (Iterator<Event> i = el.l.iterator(); i.hasNext();) {
 			Event e = i.next();
 			double loudness = 30.29 * Math.pow(e.midiVelocity, 0.2609);
 			loudness += (e.midiPitch - 66.0) / 12.0; // +1dB / oct
-			int start = (int)Math.floor(e.keyDown / inFramePeriod);
+			int start = (int) Math.floor(e.keyDown / inFramePeriod);
 			if (start < 0)
 				start = 0;
-			int stop = (int)Math.ceil((e.pedalUp + 0.5) / inFramePeriod);
+			int stop = (int) Math.ceil((e.pedalUp + 0.5) / inFramePeriod);
 			if (stop > inIntensity.length)
 				stop = inIntensity.length;
 			for (int t = start; t < stop; t++) {
 				if (loudness > inIntensity[t])
 					inIntensity[t] = loudness;
-				loudness -= Math.max(5.0, (e.midiPitch - 6.0) / 3.0) *
-											inFramePeriod;
+				loudness -= Math.max(5.0, (e.midiPitch - 6.0) / 3.0) * inFramePeriod;
 				// was: mult by decay factor. But since vals are dB, we subtract
 			}
 		}
 		MatchTempoMap tMap = new MatchTempoMap(count);
-		for (Iterator<Event> i = el.l.iterator(); i.hasNext(); ) {
+		for (Iterator<Event> i = el.l.iterator(); i.hasNext();) {
 			Event e = i.next();
 			tMap.add(e.keyDown, e.scoreBeat);
 		}
 		// el.print();
-		// tMap.print();	// for debugging
+		// tMap.print(); // for debugging
 		tMap.dump(inTempo, inFramePeriod);
 	} // convertList()
 
@@ -278,9 +272,8 @@ public class WormFile {
 		info.write(out, outTempo.length, outFramePeriod);
 		for (int i = 0; i < outTempo.length; i++) {
 			if (outFramePeriod == 0)
-				out.print(Format.d(time[i],3) + " ");
-			out.println(Format.d(outTempo[i],4) +" "+
-						Format.d(outIntensity[i],4) +" "+outFlags[i]);
+				out.print(Format.d(time[i], 3) + " ");
+			out.println(Format.d(outTempo[i], 4) + " " + Format.d(outIntensity[i], 4) + " " + outFlags[i]);
 		}
 		out.close();
 	} // write()
@@ -288,10 +281,10 @@ public class WormFile {
 	public void read(String fileName) {
 		try {
 			File f = new File(fileName);
-			if (!f.isFile())	// a local hack for UNC file names under Windows
+			if (!f.isFile()) // a local hack for UNC file names under Windows
 				f = new File("//fichte" + fileName);
 			if (!f.isFile())
-				throw(new FileNotFoundException("Could not open " + fileName));
+				throw (new FileNotFoundException("Could not open " + fileName));
 			BufferedReader in = new BufferedReader(new FileReader(f));
 			String input = info.read(in);
 			update();
