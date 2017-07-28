@@ -537,6 +537,29 @@ public class EventList implements Serializable {
 
 		return bpm;
 	}
+	
+	public double getBPM(double minbpm,double maxbpm) {
+		ArrayList<Double> onsetList = new ArrayList<Double>();
+		for (Iterator<Event> it = iterator(); it.hasNext();) {
+			Event e = it.next();
+			onsetList.add(e.keyDown);
+		}
+		DescriptiveStatistics stats = new DescriptiveStatistics();
+		if (onsetList.size() > 1)
+			for (int i = 1; i < onsetList.size(); i++) {
+				stats.addValue(onsetList.get(i) - onsetList.get(i - 1));
+			}
+
+		double median = stats.getPercentile(50);
+		double bpm = 60 / median;
+		if (bpm > maxbpm) {
+			bpm = bpm / 2;
+		} else if (bpm < minbpm) {
+			bpm = bpm * 2;
+		}
+
+		return bpm;
+	}
 
 	public void writeBeatTrackFile(String fileName) throws Exception {
 		if (fileName.endsWith(".txt") || fileName.endsWith(".csv"))

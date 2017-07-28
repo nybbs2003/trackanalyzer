@@ -413,6 +413,38 @@ public class BeatRoot {
 		}
 		return bpm;
 	}
+	public static double getBPM(String filename,double minbpm,double maxbpm) {
+		BeatRoot br = new BeatRoot();
+		br.batchMode = false;
+		br.playWithBeats = false;
+		br.argsFile = null;
+		br.reader = null;
+		br.fileChooser = null;
+		br.gui = null;
+		br.audioProcessor = new AudioProcessor();
+		br.audioIn = filename;
+		br.audioProcessor.setInputFile(br.audioIn);
+		br.audioProcessor.processFile();
+		// filter peaks:
+	    // first value: threshold minimum value of peaks
+	    // second value: decayRate how quickly previous peaks are forgotten
+		double bpm;
+		br.audioProcessor.findOnsets(0.9, 0.84);
+		EventList annotated = null;
+		EventList beats = BeatTrackDisplay.beatTrack(br.audioProcessor.onsetList, annotated);
+		bpm = beats.getBPM();
+		if (Double.isNaN(bpm)) {
+			br.audioProcessor.findOnsets(0.4, 0.84);
+			beats = BeatTrackDisplay.beatTrack(br.audioProcessor.onsetList, annotated);
+			bpm = beats.getBPM();
+			if (Double.isNaN(bpm)) {
+				br.audioProcessor.findOnsets(0.1, 0.84);
+				beats = BeatTrackDisplay.beatTrack(br.audioProcessor.onsetList, annotated);
+				bpm = beats.getBPM();
+			}
+		}
+		return bpm;
+	}
 
 	/**
 	 * Reads a line from the arguments file
